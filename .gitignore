@@ -1,0 +1,11 @@
+# Ignore archive files and scratch scripts
+*.zip
+__pycache__/
+*.pyc
+.gemini/
+create_shareable_zip.py
+generate_cdn_report.py
+inspect_*.py
+scan_all_reports.py
+validate_stats.py
+test_full_extraction.py
