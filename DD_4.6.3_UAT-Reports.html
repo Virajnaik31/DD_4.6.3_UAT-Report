@@ -1530,8 +1530,10 @@ html, body {
 (function () {
   'use strict';
   // Primary online media sources
-  window.GH_PAGES_BASE = "https://virajnaik31.github.io/DD_4.6.3_UAT-Report/";
-  window.RAW_BASE = "https://raw.githubusercontent.com/Virajnaik31/DD_4.6.3_UAT-Report/main/";
+  const GH_PAGES_BASE = "https://virajnaik31.github.io/DD_4.6.3_UAT-Report/";
+  const RAW_BASE = "https://raw.githubusercontent.com/Virajnaik31/DD_4.6.3_UAT-Report/main/";
+  window.GH_PAGES_BASE = GH_PAGES_BASE;
+  window.RAW_BASE = RAW_BASE;
 
   function getMediaUrl(path) {
     if (!path) return "";
@@ -1539,10 +1541,7 @@ html, body {
       return path;
     }
     const cleanPath = path.replace(/^\.?\//, '');
-    
-    // If the file is opened directly inside the full report repository folder with media present,
-    // we can prefer local; otherwise, we load seamlessly from GitHub Pages cloud.
-    return window.GH_PAGES_BASE + cleanPath;
+    return GH_PAGES_BASE + cleanPath;
   }
 
   // Multi-tier image fallback: GitHub Pages -> GitHub Raw -> Local -> jsDelivr
@@ -1553,7 +1552,7 @@ html, body {
     if (!img.dataset.step) {
       img.dataset.step = "1";
       // Step 1 fallback: GitHub Raw
-      img.src = window.RAW_BASE + cleanPath;
+      img.src = RAW_BASE + cleanPath;
       return;
     }
     if (img.dataset.step === "1") {
@@ -1577,7 +1576,7 @@ html, body {
     
     if (!video.dataset.step) {
       video.dataset.step = "1";
-      video.src = window.RAW_BASE + cleanPath;
+      video.src = RAW_BASE + cleanPath;
       video.load();
       return;
     }
@@ -2060,7 +2059,7 @@ html, body {
           <div class="video-player-container" id="videoPlayerBox" style="display: ${state.isVideoCollapsed ? 'none' : 'flex'};">
             <video id="testVideoPlayer" controls preload="metadata" src="${getMediaUrl(videoObj.path)}" onerror="handleVideoError(this, '${videoObj.path}')">
               <source src="${getMediaUrl(videoObj.path)}" type="video/webm">
-              <source src="${raw_base}${videoObj.path}" type="video/webm">
+              <source src="https://raw.githubusercontent.com/Virajnaik31/DD_4.6.3_UAT-Report/main/${videoObj.path}" type="video/webm">
               <source src="./${videoObj.path}" type="video/webm">
               Your browser does not support HTML5 video playback.
             </video>
