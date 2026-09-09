@@ -1529,22 +1529,9 @@ html, body {
 
 (function () {
   'use strict';
-  // Smart Environment-aware Base URL resolver
-  (function() {
-    const isLocal = typeof window !== 'undefined' && (
-      window.location.protocol === 'file:' ||
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      !window.location.hostname ||
-      window.location.hostname.endsWith('github.io')
-    );
-
-    if (isLocal) {
-      window.CDN_BASE_URL = './';
-    } else {
-      window.CDN_BASE_URL = 'https://raw.githubusercontent.com/Virajnaik31/DD_4.6.3_UAT-Report/main/';
-    }
-  })();
+  // Primary online media sources
+  window.GH_PAGES_BASE = "https://virajnaik31.github.io/DD_4.6.3_UAT-Report/";
+  window.RAW_BASE = "https://raw.githubusercontent.com/Virajnaik31/DD_4.6.3_UAT-Report/main/";
 
   function getMediaUrl(path) {
     if (!path) return "";
@@ -1552,52 +1539,51 @@ html, body {
       return path;
     }
     const cleanPath = path.replace(/^\.?\//, '');
-    const base = window.CDN_BASE_URL || './';
-    const normalizedBase = base.endsWith('/') ? base : base + '/';
-    return normalizedBase + cleanPath;
+    
+    // If the file is opened directly inside the full report repository folder with media present,
+    // we can prefer local; otherwise, we load seamlessly from GitHub Pages cloud.
+    return window.GH_PAGES_BASE + cleanPath;
   }
 
-  // Global image error handler with seamless multi-tier fallback
+  // Multi-tier image fallback: GitHub Pages -> GitHub Raw -> Local -> jsDelivr
   window.handleImgError = function(img, originalPath) {
     if (!originalPath) return;
     const cleanPath = originalPath.replace(/^\.?\//, '');
-    const currentSrc = img.src || '';
     
-    // Tier 1: If CDN/Remote failed, try local ./
-    if (!img.dataset.triedLocal && !currentSrc.startsWith('file://') && !currentSrc.includes('localhost')) {
-      img.dataset.triedLocal = "true";
+    if (!img.dataset.step) {
+      img.dataset.step = "1";
+      // Step 1 fallback: GitHub Raw
+      img.src = window.RAW_BASE + cleanPath;
+      return;
+    }
+    if (img.dataset.step === "1") {
+      img.dataset.step = "2";
+      // Step 2 fallback: Local folder
       img.src = './' + cleanPath;
       return;
     }
-    
-    // Tier 2: If local failed, try GitHub raw
-    if (!img.dataset.triedRaw) {
-      img.dataset.triedRaw = "true";
-      img.src = 'https://raw.githubusercontent.com/Virajnaik31/DD_4.6.3_UAT-Report/main/' + cleanPath;
-      return;
-    }
-
-    // Tier 3: If raw failed, try jsdelivr
-    if (!img.dataset.triedJsdelivr) {
-      img.dataset.triedJsdelivr = "true";
+    if (img.dataset.step === "2") {
+      img.dataset.step = "3";
+      // Step 3 fallback: jsDelivr CDN
       img.src = 'https://cdn.jsdelivr.net/gh/Virajnaik31/DD_4.6.3_UAT-Report@main/' + cleanPath;
       return;
     }
   };
 
-  // Global video error handler
+  // Multi-tier video fallback
   window.handleVideoError = function(video, originalPath) {
     if (!originalPath) return;
     const cleanPath = originalPath.replace(/^\.?\//, '');
-    if (!video.dataset.triedLocal) {
-      video.dataset.triedLocal = "true";
-      video.src = './' + cleanPath;
+    
+    if (!video.dataset.step) {
+      video.dataset.step = "1";
+      video.src = window.RAW_BASE + cleanPath;
       video.load();
       return;
     }
-    if (!video.dataset.triedRaw) {
-      video.dataset.triedRaw = "true";
-      video.src = 'https://raw.githubusercontent.com/Virajnaik31/DD_4.6.3_UAT-Report/main/' + cleanPath;
+    if (video.dataset.step === "1") {
+      video.dataset.step = "2";
+      video.src = './' + cleanPath;
       video.load();
       return;
     }
@@ -2074,6 +2060,7 @@ html, body {
           <div class="video-player-container" id="videoPlayerBox" style="display: ${state.isVideoCollapsed ? 'none' : 'flex'};">
             <video id="testVideoPlayer" controls preload="metadata" src="${getMediaUrl(videoObj.path)}" onerror="handleVideoError(this, '${videoObj.path}')">
               <source src="${getMediaUrl(videoObj.path)}" type="video/webm">
+              <source src="${raw_base}${videoObj.path}" type="video/webm">
               <source src="./${videoObj.path}" type="video/webm">
               Your browser does not support HTML5 video playback.
             </video>
@@ -2361,7 +2348,7 @@ html, body {
     elements.lightboxImg.src = getMediaUrl(imgObj.path); elements.lightboxImg.onerror = function() { handleImgError(this, imgObj.path); };
     elements.lightboxTitle.textContent = imgObj.name || state.lightbox.title;
     elements.lightboxCounter.textContent = `${state.lightbox.currentIndex + 1} / ${state.lightbox.images.length}`;
-    elements.lightboxDownload.href = `./${imgObj.path}`;
+    elements.lightboxDownload.href = getMediaUrl(imgObj.path);
     elements.lightboxModal.classList.add('active');
   }
 
